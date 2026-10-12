@@ -10,7 +10,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -56,18 +56,37 @@ const WIDGET_FAMILIES = new Set([
   'accessoryCircular', 'accessoryRectangular', 'accessoryInline',
 ]);
 
-const COLOR_RE = /^(#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?|rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(,\s*[\d.]+\s*)?\))$/;
+/**
+ * Egern's widget renderer accepts ONLY 6-digit hex or rgb()/rgba().
+ *
+ * An 8-digit hex such as #FFFFFFAA is NOT valid: the native renderer
+ * parses the color itself and throws
+ *   SyntaxError: Invalid character: '#'   (appendChild@[native code])
+ * with no line number pointing at the offending element. That failure
+ * mode is expensive to debug, hence this strict pattern.
+ *
+ * Note the alpha must be expressed via rgba(), not via hex digits.
+ */
+const COLOR_RE = /^(#[0-9a-fA-F]{6}|rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(,\s*[\d.]+\s*)?\))$/;
+
+/** Catches the specific 8-digit mistake with a helpful message. */
+const HEX_ALPHA_RE = /^#[0-9a-fA-F]{8}$/;
 
 function checkColor(value, path, errors) {
   if (typeof value === 'string') {
-    if (!COLOR_RE.test(value)) errors.push(`${path}: invalid color "${value}"`);
+    if (HEX_ALPHA_RE.test(value)) {
+      errors.push(
+        `${path}: "${value}" is 8-digit hex — Egern only accepts 6-digit hex ` +
+          `(use rgba() if you need transparency)`,
+      );
+    } else if (!COLOR_RE.test(value)) {
+      errors.push(`${path}: invalid color "${value}"`);
+    }
     return;
   }
   if (value && typeof value === 'object') {
     for (const key of ['light', 'dark']) {
-      if (value[key] !== undefined && !COLOR_RE.test(value[key])) {
-        errors.push(`${path}.${key}: invalid color "${value[key]}"`);
-      }
+      if (value[key] !== undefined) checkColor(value[key], `${path}.${key}`, errors);
     }
     const known = new Set(['light', 'dark']);
     for (const key of Object.keys(value)) {
@@ -251,6 +270,28 @@ async function treeFor(label, producer, family) {
 }
 
 console.log('\nWidget DSL validation');
+
+// ---- static scan: 8-digit hex anywhere in a widget-painting script ----
+// The runtime tests only exercise the branches they trigger, so scan the
+// source too: an 8-digit color in an untested code path would still
+// crash the renderer on a real device.
+const srcDir = join(here, '..', 'src');
+const scriptDir = join(here, '..', 'scripts');
+
+for (const [dir, label] of [[srcDir, 'src'], [scriptDir, 'scripts']]) {
+  for (const file of readdirSync(dir).filter((f) => f.endsWith('.js'))) {
+    const source = readFileSync(join(dir, file), 'utf8');
+    const bad = [...source.matchAll(/['"]#[0-9a-fA-F]{8}['"]/g)].map((m) => m[0].slice(1, -1));
+    if (bad.length > 0) {
+      failures += 1;
+      console.log(
+        `  FAIL  ${label}/${file}: ${bad.length} eight-digit hex color(s): ${[...new Set(bad)].join(', ')}`,
+      );
+    } else {
+      console.log(`  PASS  ${label}/${file} has no eight-digit hex colors`);
+    }
+  }
+}
 
 const families = [
   'systemSmall', 'systemMedium', 'systemLarge', 'systemExtraLarge',
