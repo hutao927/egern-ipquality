@@ -1,0 +1,9 @@
+# Egern fetches scripts as raw text over HTTP. Normalise line endings to
+# LF in the repository so what users download is byte-identical to what
+# the tests verify, regardless of who last committed from Windows.
+* text=auto eol=lf
+
+# Binary-ish assets should never be normalised.
+*.png binary
+*.jpg binary
+*.webp binary

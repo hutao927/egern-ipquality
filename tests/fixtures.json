@@ -1,0 +1,145 @@
+{
+  "http://ip-api.com/json/203.0.113.45": {
+    "status": "success",
+    "continent": "Asia",
+    "country": "Japan",
+    "countryCode": "JP",
+    "regionName": "Tokyo",
+    "city": "Tokyo",
+    "zip": "100-0001",
+    "lat": 35.6895,
+    "lon": 139.6917,
+    "timezone": "Asia/Tokyo",
+    "isp": "Example Telecom Co.",
+    "org": "Example Telecom",
+    "as": "AS64500 EXAMPLE TELECOM",
+    "asname": "EXAMPLE-TELECOM",
+    "mobile": false,
+    "proxy": false,
+    "hosting": true,
+    "query": "203.0.113.45"
+  },
+  "https://api.ip.sb/ip": "203.0.113.45\n",
+  "https://api.ipapi.is/?q=203.0.113.45": {
+    "ip": "203.0.113.45",
+    "rir": "APNIC",
+    "is_bogon": false,
+    "is_mobile": false,
+    "is_crawler": false,
+    "is_datacenter": true,
+    "is_tor": false,
+    "is_proxy": false,
+    "is_vpn": false,
+    "is_abuser": false,
+    "company": {
+      "name": "Example Telecom",
+      "type": "hosting"
+    },
+    "asn": {
+      "asn": 64500,
+      "descr": "EXAMPLE TELECOM",
+      "type": "hosting"
+    },
+    "location": {
+      "continent": "Asia",
+      "country": "Japan",
+      "country_code": "JP",
+      "state": "Tokyo",
+      "city": "Tokyo",
+      "latitude": 35.6895,
+      "longitude": 139.6917,
+      "timezone": "Asia/Tokyo",
+      "zip": "100-0001"
+    },
+    "datacenter": {
+      "datacenter": "Example DC",
+      "domain": "example.com"
+    },
+    "abuse": {
+      "score": 0,
+      "total_reports": 0
+    }
+  },
+  "https://chatgpt.com/cdn-cgi/trace": "fl=1\nip=203.0.113.45\nloc=JP\nwarp=off\n",
+  "https://disney.api.edge.bamgrid.com/devices": {
+    "__status": 200,
+    "__text": "{\"assertion\":\"eyJhbGciOiJSUzI1NiJ9.test-assertion\"}"
+  },
+  "https://disney.api.edge.bamgrid.com/graph/v1/device/graphql": {
+    "__status": 200,
+    "__text": "{\"data\":{\"refreshToken\":{\"activeSession\":{\"sessionId\":\"x\"}},\"countryCode\":\"JP\",\"inSupportedLocation\":true}}"
+  },
+  "https://disney.api.edge.bamgrid.com/token": {
+    "__status": 200,
+    "__text": "{\"refresh_token\":\"test-refresh-token-abc\",\"expires_in\":86400}"
+  },
+  "https://ipinfo.io/203.0.113.45/json": {
+    "ip": "203.0.113.45",
+    "city": "Tokyo",
+    "region": "Tokyo",
+    "country": "JP",
+    "loc": "35.6895,139.6917",
+    "org": "AS64500 Example Telecom Co.",
+    "postal": "100-0001",
+    "timezone": "Asia/Tokyo"
+  },
+  "https://ipinfo.io/ip": "203.0.113.45\n",
+  "https://mail.163.com/": {
+    "__status": 200,
+    "__text": "ok"
+  },
+  "https://mail.google.com/": {
+    "__status": 200,
+    "__text": "ok"
+  },
+  "https://mail.qq.com/": {
+    "__status": 200,
+    "__text": "ok"
+  },
+  "https://mail.ru/": {
+    "__status": 200,
+    "__text": "ok"
+  },
+  "https://mail.yahoo.com/": {
+    "__status": 302,
+    "__text": ""
+  },
+  "https://outlook.live.com/": {
+    "__status": 200,
+    "__text": "ok"
+  },
+  "https://play.google.com/": {
+    "__status": 200,
+    "__text": "<html><div class=\"yVZQTb\">Japan</div></html>"
+  },
+  "https://www.cloudflare.com/cdn-cgi/trace": "fl=123abc\nh=www.cloudflare.com\nip=203.0.113.45\nts=1700000000.000\nvisit_scheme=https\nuag=Mozilla/5.0\ncolo=NRT\nsliver=none\nhttp=http/1.1\nloc=JP\ntls=TLSv1.3\nsni=plaintext\nwarp=off\ngateway=off\n",
+  "https://www.gmx.com/": {
+    "__status": 200,
+    "__text": "ok"
+  },
+  "https://www.icloud.com/mail": {
+    "__status": 200,
+    "__text": "ok"
+  },
+  "https://www.netflix.com/title/70143836": {
+    "__status": 200,
+    "__text": "<html><title>Netflix</title><h1>Breaking Bad</h1></html>"
+  },
+  "https://www.netflix.com/title/81280792": {
+    "__status": 200,
+    "__text": "<html><title>Netflix</title><h1>LEGO Ninjago</h1></html>"
+  },
+  "https://www.primevideo.com": {
+    "__status": 200,
+    "__text": "<html>\"currentTerritory\":\"JP\" Prime Video</html>"
+  },
+  "https://www.reddit.com/": {
+    "__status": 403,
+    "__text": "<html>blocked</html>"
+  },
+  "https://www.tiktok.com/cdn-cgi/trace": "fl=1\nip=203.0.113.45\nloc=JP\n",
+  "https://www.youtube.com/premium": {
+    "__status": 200,
+    "__text": "<html>\"INNERTUBE_CONTEXT_GL\":\"JP\" ad-free YouTube Premium</html>"
+  }
+}

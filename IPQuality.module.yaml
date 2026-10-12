@@ -1,0 +1,306 @@
+# =====================================================================
+# IP Quality Check for Egern
+# An Egern port of xykt/IPQuality
+# https://github.com/xykt/IPQuality
+#
+# Install: Tools -> Modules -> + -> paste this file's raw URL
+# Then open the module's settings page to fill in the Env fields.
+#
+# This module is OPTIONAL. Every script is self-contained, so you can
+# also just paste a single file from scripts/ into
+# Tools -> Scripts -> + and skip the module entirely. See README.md.
+# =====================================================================
+
+name: IP 质量体检 (IPQuality)
+description: 检测代理出口 IP 的基础信息、风险评分、风险因子与流媒体/AI 解锁状态，支持节点对比、分流规则生成与 IP 变化监控。移植自 xykt/IPQuality。
+author: Egern port of xykt/IPQuality
+homepage: https://github.com/xykt/IPQuality
+icon: globe.asia.australia.fill
+
+# ---------------------------------------------------------------------
+# Module arguments. These are also declared in env_schema below so the
+# module settings page renders proper controls.
+#
+# If you install locally instead of hosting the repo, set SCRIPT_BASE to
+# the local folder that contains the scripts, e.g.
+#   SCRIPT_BASE: "/Egern/IPQuality"
+# ---------------------------------------------------------------------
+compat_arguments:
+  SCRIPT_BASE: "https://raw.githubusercontent.com/hutao927/egern-ipquality/main"
+
+env_schema:
+  # -------- 运行控制 --------
+  IP_VERSION:
+    name: IP 版本
+    description: 检测出口 IP 时使用的协议栈。auto 会同时尝试 IPv4 与 IPv6 并取最先响应者。
+    options:
+      - auto
+      - "4"
+      - "6"
+    default_value: auto
+
+  POLICY:
+    name: 代理策略 (可选)
+    description: 指定用于检测的代理策略/策略组名称。留空则遵循当前规则。
+    default_value: ""
+
+  SHOW_FULL_IP:
+    name: 显示完整 IP
+    description: 开启后报告中显示完整 IP 地址，关闭则打码为 x.x.*.*
+    options:
+      - "false"
+      - "true"
+    default_value: "false"
+
+  SKIP_SERVICES:
+    name: 跳过流媒体检测
+    description: 开启可显著加快速度，但报告中不包含解锁检测结果。
+    options:
+      - "false"
+      - "true"
+    default_value: "false"
+
+  SKIP_MAIL:
+    name: 跳过邮局检测
+    description: 跳过邮箱服务商的可达性检测。
+    options:
+      - "false"
+      - "true"
+    default_value: "false"
+
+  ONLY_SERVICES:
+    name: 仅检测指定服务 (可选)
+    description: 用英文逗号分隔服务 id，只跑这些项目以加快速度。可选 id：chatgpt, netflix, youtube, disney, primevideo, tiktok, googleplay, reddit。留空表示全部检测。
+    default_value: ""
+
+  TRACK_HISTORY:
+    name: 记录 IP 历史
+    description: 记录每次运行的出口 IP，用于「出口 IP 变化」模块与变化通知。
+    options:
+      - "true"
+      - "false"
+    default_value: "true"
+
+  NOTIFY:
+    name: 发送通知
+    description: 运行完成后推送一条通知，点击可将完整报告复制到剪贴板。
+    options:
+      - "true"
+      - "false"
+    default_value: "true"
+
+  OUTPUT:
+    name: 输出格式
+    description: markdown 输出可读报告；json 输出结构化数据。
+    options:
+      - markdown
+      - json
+    default_value: markdown
+
+  SERVICE_TIMEOUT:
+    name: 服务探测超时 (毫秒)
+    description: 单个流媒体/AI 服务探测的最长等待时间。
+    default_value: "15000"
+
+  # -------- 小组件 --------
+  REFRESH_MINUTES:
+    name: 小组件缓存时长 (分钟)
+    description: 缓存新鲜期内小组件直接读取缓存、不发起任何网络请求。过期后会做一次轻量刷新。
+    default_value: "30"
+
+  AUTO_REFRESH:
+    name: 小组件自动刷新
+    description: 缓存过期时允许小组件自行发起轻量检测。关闭则只显示缓存并标注「缓存」。
+    options:
+      - "true"
+      - "false"
+    default_value: "true"
+
+  # -------- IP 变化监控 --------
+  NOTIFY_ON_CHANGE:
+    name: IP 变化时通知
+    description: 出口 IP 或归属发生变化时推送通知。
+    options:
+      - "true"
+      - "false"
+    default_value: "true"
+
+  NOTIFY_ON_STABLE:
+    name: IP 未变化时也通知
+    description: 默认关闭，避免每次切网都收到无意义通知。开启后可用于确认监控在运行。
+    options:
+      - "false"
+      - "true"
+    default_value: "false"
+
+  FULL_ON_CHANGE:
+    name: IP 变化后跑完整体检
+    description: 检测到 IP 变化时额外执行一次完整体检并推送摘要。较慢，默认关闭。
+    options:
+      - "false"
+      - "true"
+    default_value: "false"
+
+  MAX_HISTORY:
+    name: 历史记录条数上限
+    description: 出口 IP 历史最多保留多少条。
+    default_value: "20"
+
+  # -------- 节点对比 / 规则生成 --------
+  MODE:
+    name: 节点工具模式
+    description: compare 对比多个节点；rules 根据当前出口生成分流规则建议。
+    options:
+      - compare
+      - rules
+    default_value: compare
+
+  POLICIES:
+    name: 待对比的策略 (节点对比模式)
+    description: 用英文逗号分隔策略组或节点名称，一次最多 12 个。例如：香港01,日本02,新加坡03
+    default_value: ""
+
+  NODE_TIMEOUT:
+    name: 单节点超时 (毫秒)
+    description: 节点对比时每个节点的检测超时。
+    default_value: "10000"
+
+  TARGET_POLICY:
+    name: 规则目标策略 (规则模式)
+    description: 生成的规则会把受阻服务的域名指向这个策略名。请填写你配置中真实存在的策略名。
+    default_value: PROXY
+
+  # -------- 可选 API Key --------
+  # 以下均为可选。不填也能运行，只是报告中可用的数据库会减少。
+  IPINFO_TOKEN:
+    name: IPinfo Token (可选)
+    description: 填写后 ipinfo 会返回更完整的字段与更高的配额。
+    default_value: ""
+
+  ABUSEIPDB_KEY:
+    name: AbuseIPDB Key (可选)
+    description: 填写后报告中包含 AbuseIPDB 的滥用置信度评分。
+    default_value: ""
+
+  SCAMALYTICS_USER:
+    name: Scamalytics 用户名 (可选)
+    description: Scamalytics API 的 user 字段（需与 Key 同时填写）。
+    default_value: ""
+
+  SCAMALYTICS_KEY:
+    name: Scamalytics Key (可选)
+    description: Scamalytics API 的 key 字段（需与用户名同时填写）。
+    default_value: ""
+
+  IPQS_KEY:
+    name: IPQualityScore Key (可选)
+    description: 填写后报告中包含 IPQS 欺诈评分。
+    default_value: ""
+
+  IPREGISTRY_KEY:
+    name: ipregistry Key (可选)
+    description: 填写后报告中包含 ipregistry 的安全标记。
+    default_value: ""
+
+# ---------------------------------------------------------------------
+# Scripts
+# ---------------------------------------------------------------------
+scriptings:
+  # Manual / headless full report. Also renders the widget tree when
+  # invoked by the widget system.
+  - generic:
+      name: ipquality
+      script_url: "{{{SCRIPT_BASE}}}/scripts/ipquality.js"
+      timeout: 120
+      env:
+        IP_VERSION: "{{{IP_VERSION}}}"
+        POLICY: "{{{POLICY}}}"
+        SHOW_FULL_IP: "{{{SHOW_FULL_IP}}}"
+        SKIP_SERVICES: "{{{SKIP_SERVICES}}}"
+        SKIP_MAIL: "{{{SKIP_MAIL}}}"
+        ONLY_SERVICES: "{{{ONLY_SERVICES}}}"
+        TRACK_HISTORY: "{{{TRACK_HISTORY}}}"
+        NOTIFY: "{{{NOTIFY}}}"
+        OUTPUT: "{{{OUTPUT}}}"
+        SERVICE_TIMEOUT: "{{{SERVICE_TIMEOUT}}}"
+        IPINFO_TOKEN: "{{{IPINFO_TOKEN}}}"
+        ABUSEIPDB_KEY: "{{{ABUSEIPDB_KEY}}}"
+        SCAMALYTICS_USER: "{{{SCAMALYTICS_USER}}}"
+        SCAMALYTICS_KEY: "{{{SCAMALYTICS_KEY}}}"
+        IPQS_KEY: "{{{IPQS_KEY}}}"
+        IPREGISTRY_KEY: "{{{IPREGISTRY_KEY}}}"
+
+  # Home Screen / Lock Screen widget renderer.
+  - generic:
+      name: ipquality-widget
+      script_url: "{{{SCRIPT_BASE}}}/scripts/ipquality-widget.js"
+      timeout: 60
+      env:
+        POLICY: "{{{POLICY}}}"
+        IP_VERSION: "{{{IP_VERSION}}}"
+        REFRESH_MINUTES: "{{{REFRESH_MINUTES}}}"
+        AUTO_REFRESH: "{{{AUTO_REFRESH}}}"
+
+  # Node comparison / rule generation. Run manually when you need it.
+  - generic:
+      name: ipquality-nodes
+      script_url: "{{{SCRIPT_BASE}}}/scripts/ipquality-nodes.js"
+      timeout: 300
+      env:
+        MODE: "{{{MODE}}}"
+        POLICIES: "{{{POLICIES}}}"
+        NODE_TIMEOUT: "{{{NODE_TIMEOUT}}}"
+        TARGET_POLICY: "{{{TARGET_POLICY}}}"
+        IP_VERSION: "{{{IP_VERSION}}}"
+        NOTIFY: "{{{NOTIFY}}}"
+
+  # Watches the egress IP and notifies when it changes. Fires on
+  # network changes (Wi-Fi / cellular / VPN).
+  - network:
+      name: ipquality-net
+      script_url: "{{{SCRIPT_BASE}}}/scripts/ipquality-net.js"
+      timeout: 60
+      env:
+        POLICY: "{{{POLICY}}}"
+        IP_VERSION: "{{{IP_VERSION}}}"
+        NOTIFY_ON_CHANGE: "{{{NOTIFY_ON_CHANGE}}}"
+        NOTIFY_ON_STABLE: "{{{NOTIFY_ON_STABLE}}}"
+        FULL_ON_CHANGE: "{{{FULL_ON_CHANGE}}}"
+        MAX_HISTORY: "{{{MAX_HISTORY}}}"
+        IPINFO_TOKEN: "{{{IPINFO_TOKEN}}}"
+
+  # Automatic daily run at 09:00 so the widget cache stays warm and you
+  # get a fresh notification each morning. Disable if unwanted.
+  - schedule:
+      name: ipquality-daily
+      cron: "0 9 * * *"
+      script_url: "{{{SCRIPT_BASE}}}/scripts/ipquality.js"
+      timeout: 120
+      env:
+        IP_VERSION: "{{{IP_VERSION}}}"
+        POLICY: "{{{POLICY}}}"
+        SHOW_FULL_IP: "{{{SHOW_FULL_IP}}}"
+        SKIP_SERVICES: "{{{SKIP_SERVICES}}}"
+        SKIP_MAIL: "{{{SKIP_MAIL}}}"
+        ONLY_SERVICES: "{{{ONLY_SERVICES}}}"
+        TRACK_HISTORY: "true"
+        NOTIFY: "true"
+        OUTPUT: "markdown"
+        SERVICE_TIMEOUT: "{{{SERVICE_TIMEOUT}}}"
+        IPINFO_TOKEN: "{{{IPINFO_TOKEN}}}"
+        ABUSEIPDB_KEY: "{{{ABUSEIPDB_KEY}}}"
+        SCAMALYTICS_USER: "{{{SCAMALYTICS_USER}}}"
+        SCAMALYTICS_KEY: "{{{SCAMALYTICS_KEY}}}"
+        IPQS_KEY: "{{{IPQS_KEY}}}"
+        IPREGISTRY_KEY: "{{{IPREGISTRY_KEY}}}"
+
+# ---------------------------------------------------------------------
+# Widgets
+# ---------------------------------------------------------------------
+widgets:
+  - name: IP 质量
+    script_name: ipquality-widget
+    env:
+      POLICY: "{{{POLICY}}}"
+      REFRESH_MINUTES: "{{{REFRESH_MINUTES}}}"
+      AUTO_REFRESH: "{{{AUTO_REFRESH}}}"

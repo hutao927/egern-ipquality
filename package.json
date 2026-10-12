@@ -1,0 +1,17 @@
+{
+  "name": "egern-ipquality",
+  "version": "2.0.0",
+  "private": true,
+  "description": "IP quality / risk / unlock checker for Egern — a port of xykt/IPQuality",
+  "license": "AGPL-3.0",
+  "type": "module",
+  "scripts": {
+    "build": "node tools/bundle.mjs",
+    "check": "node tools/check.mjs",
+    "test": "node tests/run-tests.mjs",
+    "validate": "node tests/validate-module.mjs && node tests/validate-widget-dsl.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
